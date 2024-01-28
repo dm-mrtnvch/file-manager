@@ -17,7 +17,7 @@ const getGreeting = () => {
   console.log(`Welcome to the File Manager, ${getUsername()}`)
 }
 
-const getWorkingDirectory = () => {
+export const getCurrentDirectory = () => {
   const currentDirectory = process.cwd()
   console.log(`You are currently in ${currentDirectory}`)
 }
@@ -37,4 +37,4 @@ readlineInterface.on('close', () => {
 
 setUserHomeAsWorkingDirectory()
 getGreeting()
-getWorkingDirectory()
+getCurrentDirectory()
