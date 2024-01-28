@@ -1,0 +1,21 @@
+{
+  "name": "node-file-manager",
+  "version": "1.0.0",
+  "description": "file manager",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dm-mrtnvch/node-file-manager.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/dm-mrtnvch/node-file-manager/issues"
+  },
+  "homepage": "https://github.com/dm-mrtnvch/node-file-manager#readme"
+}
