@@ -1,12 +1,13 @@
 import readline from 'readline'
 import os from 'os'
+import {inputCommandsHandler} from './inputCommands.js'
 
 const readlineInterface = readline.createInterface({
   input: process.stdin,
   output: process.stdout
 })
 
-const getUsername = () => {
+export const getUsername = () => {
   const usernameArg = process.argv.find(arg => arg.startsWith('--username'))
   const usernameValue = usernameArg.split('=')[1]
   return usernameValue || 'John Doe'
@@ -27,10 +28,7 @@ const setUserHomeAsWorkingDirectory = () => {
 }
 
 readlineInterface.on('line', (input) => {
-  if(input === '.exit') {
-    console.log(`Thank you for using File Manager, ${getUsername()}, goodbye!`)
-    process.exit(0)
-  }
+  inputCommandsHandler(input)
 })
 
 readlineInterface.on('close', () => {
