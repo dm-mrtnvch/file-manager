@@ -12,3 +12,14 @@ const getUsername = () => {
 }
 
 console.log(`Welcome to the File Manager, ${getUsername()}`)
+
+readlineInterface.on('line', (input) => {
+  if(input === '.exit') {
+    console.log(`Thank you for using File Manager, ${getUsername()}, goodbye!`)
+    process.exit(0)
+  }
+})
+
+readlineInterface.on('close', () => {
+  console.log(`Thank you for using File Manager, ${getUsername()}, goodbye!`)
+})
