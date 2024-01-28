@@ -1,4 +1,5 @@
 import readline from 'readline'
+import os from 'os'
 
 const readlineInterface = readline.createInterface({
   input: process.stdin,
@@ -11,7 +12,19 @@ const getUsername = () => {
   return usernameValue || 'John Doe'
 }
 
-console.log(`Welcome to the File Manager, ${getUsername()}`)
+const getGreeting = () => {
+  console.log(`Welcome to the File Manager, ${getUsername()}`)
+}
+
+const getWorkingDirectory = () => {
+  const currentDirectory = process.cwd()
+  console.log(`You are currently in ${currentDirectory}`)
+}
+
+const setUserHomeAsWorkingDirectory = () => {
+  const startingWorkingDirectory = os.homedir()
+  process.chdir(startingWorkingDirectory)
+}
 
 readlineInterface.on('line', (input) => {
   if(input === '.exit') {
@@ -23,3 +36,7 @@ readlineInterface.on('line', (input) => {
 readlineInterface.on('close', () => {
   console.log(`Thank you for using File Manager, ${getUsername()}, goodbye!`)
 })
+
+setUserHomeAsWorkingDirectory()
+getGreeting()
+getWorkingDirectory()
