@@ -1,4 +1,5 @@
 import {getCurrentDirectory, getUsername} from './index.js'
+import { createReadStream } from 'fs'
 import os from 'os'
 import path from 'path'
 import fs from 'fs'
@@ -52,12 +53,24 @@ function getInvalidInput() {
   console.log('Invalid input')
 }
 
-export function inputCommandsHandler(input) {
-  if (input.startsWith('cd ')) {
-    const directory = input.slice(3)
-    cd(directory)
-  } else if (inputCommands.hasOwnProperty(input)) {
-    inputCommands[input]()
+export const inputCommandsHandler = function(input) {
+  const args = input.trim().split(/\s+/)
+  const command = args[0]
+
+  if (command === 'cd') {
+    if (args[1]) {
+      cd(args[1])
+    } else {
+      getInvalidInput()
+    }
+  } else if (command === 'cat') {
+    if (args[1]) {
+      cat(args[1])
+    } else {
+      getInvalidInput()
+    }
+  } else if (inputCommands.hasOwnProperty(command)) {
+    inputCommands[command]()
   } else {
     getInvalidInput()
   }
@@ -87,3 +100,25 @@ function list ()  {
   })
 }
 
+function cat(filePath) {
+  const fullFilePath = path.resolve(process.cwd(), filePath)
+
+  if (!fullFilePath.startsWith(os.homedir())) {
+    console.log("Access denied: You can only access files within your home directory.")
+    return
+  }
+
+  const readStream = createReadStream(fullFilePath, 'utf8')
+
+  readStream.on('data', function(chunk) {
+    console.log(chunk)
+  })
+
+  readStream.on('error', function(err) {
+    console.log('Error reading file:', err.message)
+  })
+
+  readStream.on('end', function() {
+    console.log('End of file reached.')
+  })
+}
