@@ -7,22 +7,22 @@ const readlineInterface = readline.createInterface({
   output: process.stdout
 })
 
-export const getUsername = () => {
+export function getUsername() {
   const usernameArg = process.argv.find(arg => arg.startsWith('--username'))
-  const usernameValue = usernameArg.split('=')[1]
+  const usernameValue = usernameArg?.split('=')[1] || null
   return usernameValue || 'John Doe'
 }
 
-const getGreeting = () => {
+function getGreeting() {
   console.log(`Welcome to the File Manager, ${getUsername()}`)
 }
 
-export const getCurrentDirectory = () => {
+export function getCurrentDirectory() {
   const currentDirectory = process.cwd()
   console.log(`You are currently in ${currentDirectory}`)
 }
 
-const setUserHomeAsWorkingDirectory = () => {
+function setUserHomeAsWorkingDirectory() {
   const startingWorkingDirectory = os.homedir()
   process.chdir(startingWorkingDirectory)
 }

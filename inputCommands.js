@@ -1,13 +1,14 @@
 import {getCurrentDirectory, getUsername} from './index.js'
 import os from 'os'
 import path from 'path'
+import fs from 'fs'
 
-const exit = () => {
+function exit() {
   console.log(`Thank you for using File Manager, ${getUsername()}, goodbye!`)
   process.exit(0)
 }
 
-const up = (directory) => {
+function up(directory) {
   const currentDirectory = process.cwd()
   const rootDirectory = os.homedir()
 
@@ -19,11 +20,11 @@ const up = (directory) => {
   }
 }
 
-const cd = (directory) => {
+function cd(directory) {
   const currentDirectory = process.cwd()
   const rootDirectory = os.homedir()
 
-  if (directory.startsWith('./')) {
+  if (directory.startsWith('./') || path.isAbsolute(directory)) {
     const targetDirectory = path.resolve(currentDirectory, directory)
 
     if (targetDirectory.startsWith(rootDirectory)) {
@@ -33,20 +34,25 @@ const cd = (directory) => {
       } catch (e) {
         getInvalidInput()
       }
+    } else {
+      getInvalidInput()
     }
+  } else {
+    getInvalidInput()
   }
 }
 
 export const inputCommands = {
   '.exit': exit,
   'up': up,
+  'ls': list
 }
 
-const getInvalidInput = () => {
+function getInvalidInput() {
   console.log('Invalid input')
 }
 
-export const inputCommandsHandler = (input) => {
+export function inputCommandsHandler(input) {
   if (input.startsWith('cd ')) {
     const directory = input.slice(3)
     cd(directory)
@@ -56,3 +62,28 @@ export const inputCommandsHandler = (input) => {
     getInvalidInput()
   }
 }
+
+function list ()  {
+  const currentDirectory = process.cwd()
+  fs.readdir(currentDirectory, { withFileTypes: true }, (err, items) => {
+    if (err) {
+      console.log('Error reading directory')
+      return
+    }
+
+    const sortedItems = items
+      .map(item => ({
+        Name: item.name,
+        Type: item.isDirectory() ? 'directory' : 'file'
+      }))
+      .sort((a, b) => {
+        if (a.Type === b.Type) {
+          return a.Name.localeCompare(b.Name)
+        }
+        return a.Type === 'directory' ? -1 : 1
+      })
+
+    console.table(sortedItems)
+  })
+}
+
