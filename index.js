@@ -38,6 +38,7 @@ const commands = {
   rn: renameFile,
   cp: copyFile,
   mv: moveFile,
+  rm: deleteFile
 }
 
 console.log(`Welcome to the File Manager, ${user}!`)
@@ -160,6 +161,20 @@ async function createEmptyFile(fileName) {
   }
 }
 
+async function deleteFile(filePath) {
+  const fullPath = resolve(process.cwd(), filePath)
+  try {
+    await fs.access(fullPath)
+    await fs.unlink(fullPath)
+    console.log(`${filePath} has been deleted`)
+  } catch (error) {
+    if (error.code === 'ENOENT') {
+      console.log('File does not exist')
+    } else {
+      console.log('Failed to delete the file')
+    }
+  }
+}
 
 
 async function copyFile(sourcePath, destinationDir) {
