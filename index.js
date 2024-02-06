@@ -1,40 +1,44 @@
-import readline from 'readline'
-import os from 'os'
-import {inputCommandsHandler} from './inputCommands.js'
+import { homedir } from "os"
+import readline from "readline"
+import { EventEmitter } from "events"
 
-const readlineInterface = readline.createInterface({
+const homeDirectory = homedir()
+let user = process.argv.find(arg => arg.startsWith('--username='))?.split('=')[1] || 'Anonymous'
+if (user === 'Anonymous') {
+  console.log('no user name. default name: Anonymous')
+}
+
+process.chdir(homeDirectory)
+
+const cli = readline.createInterface({
   input: process.stdin,
   output: process.stdout
 })
 
-export function getUsername() {
-  const usernameArg = process.argv.find(arg => arg.startsWith('--username'))
-  const usernameValue = usernameArg?.split('=')[1] || null
-  return usernameValue || 'John Doe'
-}
+const commandHandler = new EventEmitter()
 
-function getGreeting() {
-  console.log(`Welcome to the File Manager, ${getUsername()}`)
-}
-
-export function getCurrentDirectory() {
-  const currentDirectory = process.cwd()
-  console.log(`You are currently in ${currentDirectory}`)
-}
-
-function setUserHomeAsWorkingDirectory() {
-  const startingWorkingDirectory = os.homedir()
-  process.chdir(startingWorkingDirectory)
-}
-
-readlineInterface.on('line', (input) => {
-  inputCommandsHandler(input)
+commandHandler.on('exit', () => {
+  console.log(`thanks for using file manager, ${user}, good bye!`)
+  cli.close()
 })
 
-readlineInterface.on('close', () => {
-  console.log(`Thank you for using File Manager, ${getUsername()}, goodbye!`)
+const showCurrentDirectory = () => {
+  console.log(`current working directory is: ${process.cwd()}`)
+}
+
+console.log(`welcome to file manager, ${user}!`)
+showCurrentDirectory()
+
+cli.on('line', (input) => {
+  const [command, ...args] = input.trim().split(/\s+/)
+  if (command === '.exit') {
+    commandHandler.emit('exit')
+  } else {
+    console.log(`Invalid input: ${command}`)
+    showCurrentDirectory()
+  }
 })
 
-setUserHomeAsWorkingDirectory()
-getGreeting()
-getCurrentDirectory()
+cli.on('SIGINT', () => {
+  commandHandler.emit('exit')
+})

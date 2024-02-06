@@ -54,27 +54,27 @@ function getInvalidInput() {
 }
 
 export const inputCommandsHandler = function(input) {
-  const args = input.trim().split(/\s+/)
-  const command = args[0]
+  const args = input.trim().split(/\s+/);
+   command = args[0];
 
   if (command === 'cd') {
     if (args[1]) {
-      cd(args[1])
+      cd(args[1]);
     } else {
-      getInvalidInput()
+      getInvalidInput();
     }
   } else if (command === 'cat') {
     if (args[1]) {
-      cat(args[1])
+      cat(args[1]);
     } else {
-      getInvalidInput()
+      getInvalidInput();
     }
   } else if (inputCommands.hasOwnProperty(command)) {
-    inputCommands[command]()
+    inputCommands[command]();
   } else {
-    getInvalidInput()
+    getInvalidInput();
   }
-}
+};
 
 function list ()  {
   const currentDirectory = process.cwd()
