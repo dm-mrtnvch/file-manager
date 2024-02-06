@@ -5,6 +5,9 @@ import fs from 'fs/promises'
 import { cwd } from 'process'
 import { createReadStream, createWriteStream } from 'fs'
 import { createHash } from 'crypto'
+import { createBrotliCompress } from 'zlib'
+import { pipeline } from 'stream/promises'
+
 
 const homeDirectory = homedir()
 let user = process.argv.find(function(arg) { return arg.startsWith('--username=') })?.split('=')[1] || 'Anonymous'
@@ -41,7 +44,8 @@ const commands = {
   mv: moveFile,
   rm: deleteFile,
   os: systemInfo,
-  hash: hashFile
+  hash: hashFile,
+  compress: compressFile
 }
 
 console.log(`Welcome to the File Manager, ${user}!`)
@@ -149,6 +153,28 @@ async function moveFile(sourcePath, destinationDir) {
   }
 }
 
+async function compressFile(inputPath, outputPath) {
+  if (!inputPath || !outputPath) {
+    console.log("Error: Both source and destination paths must be provided.")
+    return
+  }
+  const sourcePath = resolve(process.cwd(), inputPath)
+  const destinationPath = resolve(process.cwd(), outputPath)
+  const sourceStream = createReadStream(sourcePath)
+  const destinationStream = createWriteStream(destinationPath)
+  const compressStream = createBrotliCompress()
+
+  try {
+    await pipeline(
+      sourceStream,
+      compressStream,
+      destinationStream
+    )
+    console.log(`File has been compressed and saved to: ${outputPath}`)
+  } catch (error) {
+    console.error('Compression failed:', error)
+  }
+}
 
 async function createEmptyFile(fileName) {
   const fullPath = resolve(process.cwd(), fileName)
