@@ -4,6 +4,7 @@ import path, {resolve, format, dirname, basename, join} from 'path'
 import fs from 'fs/promises'
 import { cwd } from 'process'
 import { createReadStream, createWriteStream } from 'fs'
+import { createHash } from 'crypto'
 
 const homeDirectory = homedir()
 let user = process.argv.find(function(arg) { return arg.startsWith('--username=') })?.split('=')[1] || 'Anonymous'
@@ -39,7 +40,8 @@ const commands = {
   cp: copyFile,
   mv: moveFile,
   rm: deleteFile,
-  os: systemInfo
+  os: systemInfo,
+  hash: hashFile
 }
 
 console.log(`Welcome to the File Manager, ${user}!`)
@@ -174,6 +176,27 @@ async function deleteFile(filePath) {
     } else {
       console.log('Failed to delete the file')
     }
+  }
+}
+
+async function calculateFileHash(filePath) {
+  const fullPath = resolve(process.cwd(), filePath)
+  const hash = createHash('sha256')
+  const stream = createReadStream(fullPath)
+
+  return new Promise((resolve, reject) => {
+    stream.on('data', chunk => hash.update(chunk))
+    stream.on('end', () => resolve(hash.digest('hex')))
+    stream.on('error', reject)
+  })
+}
+
+async function hashFile(filePath) {
+  try {
+    const hashValue = await calculateFileHash(filePath)
+    console.log(`Hash for ${filePath} is ${hashValue}`)
+  } catch (error) {
+    console.log(`Failed to calculate hash for ${filePath}`)
   }
 }
 
