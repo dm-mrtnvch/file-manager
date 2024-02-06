@@ -1,6 +1,8 @@
 import { homedir } from "os"
 import readline from "readline"
-import path, {resolve} from 'path'
+import path, {resolve, format} from 'path'
+import fs from 'fs/promises'
+import { cwd } from 'process'
 
 const homeDirectory = homedir()
 let user = process.argv.find(function(arg) { return arg.startsWith('--username=') })?.split('=')[1] || 'Anonymous'
@@ -28,7 +30,8 @@ function showCurrentDirectory() {
 
 const commands = {
   up: up,
-  cd: cd
+  cd: cd,
+  ls: ls
 }
 
 console.log(`Welcome to the File Manager, ${user}!`)
@@ -46,6 +49,28 @@ cli.on('line', function(input) {
     showCurrentDirectory()
   }
 })
+
+async function ls() {
+  try {
+    const entries = await fs.readdir(cwd(), { withFileTypes: true })
+    const folders = entries.filter(entry => entry.isDirectory()).map(dir => ({ Name: dir.name, Type: 'Directory' }))
+    const files = entries.filter(entry => entry.isFile()).map(file => ({ Name: file.name, Type: 'File' }))
+    const links = entries.filter(entry => entry.isSymbolicLink()).map(link => ({ Name: link.name, Type: 'Symbolic Link' }))
+
+    const sortedFolders = folders.sort((a, b) => a.Name.localeCompare(b.Name))
+    const sortedFiles = files.sort((a, b) => a.Name.localeCompare(b.Name))
+    const sortedLinks = links.sort((a, b) => a.Name.localeCompare(b.Name))
+
+    const combinedList = [...sortedFolders, ...sortedFiles, ...sortedLinks]
+    if (combinedList.length === 0) {
+      console.log('Directory is empty')
+    } else {
+      console.table(combinedList)
+    }
+  } catch {
+    console.log('Failed to list directory contents')
+  }
+}
 
 function cd(directory) {
   const targetDirectory = resolve(process.cwd(), directory)
