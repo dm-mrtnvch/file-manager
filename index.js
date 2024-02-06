@@ -3,7 +3,7 @@ import readline from "readline"
 import path, {resolve, format, dirname, basename, join} from 'path'
 import fs from 'fs/promises'
 import { cwd } from 'process'
-import { createReadStream } from 'fs'
+import { createReadStream, createWriteStream } from 'fs'
 
 const homeDirectory = homedir()
 let user = process.argv.find(function(arg) { return arg.startsWith('--username=') })?.split('=')[1] || 'Anonymous'
@@ -36,6 +36,7 @@ const commands = {
   cat: displayFileContent,
   add: createEmptyFile,
   rn: renameFile,
+  cp: copyFile,
 }
 
 console.log(`Welcome to the File Manager, ${user}!`)
@@ -107,15 +108,55 @@ async function createEmptyFile(fileName) {
   }
 }
 
-async function renameFile(oldPath, newName) {
-  const sourcePath = resolve(process.cwd(), oldPath);
-  const destinationPath = join(dirname(sourcePath), newName);
+
+
+async function copyFile(sourcePath, destinationDir) {
+  if (typeof sourcePath !== 'string' || typeof destinationDir !== 'string') {
+    console.log("Error: Both source path and destination directory must be provided as strings.")
+    return
+  }
+  const resolvedSourcePath = resolve(process.cwd(), sourcePath)
+  const resolvedDestinationDir = resolve(process.cwd(), destinationDir)
+  const destinationPath = join(resolvedDestinationDir, basename(sourcePath))
 
   try {
-    await fs.rename(sourcePath, destinationPath);
-    console.log(`${basename(oldPath)} has been renamed to ${newName}`);
+    const sourceStats = await fs.stat(resolvedSourcePath)
+    if (!sourceStats.isFile()) {
+      console.log("The source is not a file.")
+      return
+    }
+
+    const destinationStats = await fs.stat(resolvedDestinationDir)
+    if (!destinationStats.isDirectory()) {
+      console.log("The destination is not a directory.")
+      return
+    }
+
+    const readable = createReadStream(resolvedSourcePath)
+    const writable = createWriteStream(destinationPath)
+    readable.pipe(writable)
+
+    readable.on('error', () => console.log("Failed to read the source file."))
+    writable.on('error', () => console.log("Failed to write to the destination file."))
+    writable.on('close', () => console.log(`${basename(sourcePath)} has been copied to ${destinationDir}`))
   } catch (error) {
-    console.log('Failed to rename the file. Make sure the file exists and the new name is valid.');
+    if (error.code === 'ENOENT') {
+      console.log("Source file or destination directory does not exist.")
+    } else {
+      console.log("An error occurred.")
+    }
+  }
+}
+
+async function renameFile(oldPath, newName) {
+  const sourcePath = resolve(process.cwd(), oldPath)
+  const destinationPath = join(dirname(sourcePath), newName)
+
+  try {
+    await fs.rename(sourcePath, destinationPath)
+    console.log(`${basename(oldPath)} has been renamed to ${newName}`)
+  } catch (error) {
+    console.log('Failed to rename the file. Make sure the file exists and the new name is valid.')
   }
 }
 
