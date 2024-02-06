@@ -1,4 +1,4 @@
-import { homedir } from "os"
+import os, { homedir } from "os"
 import readline from "readline"
 import path, {resolve, format, dirname, basename, join} from 'path'
 import fs from 'fs/promises'
@@ -38,7 +38,8 @@ const commands = {
   rn: renameFile,
   cp: copyFile,
   mv: moveFile,
-  rm: deleteFile
+  rm: deleteFile,
+  os: systemInfo
 }
 
 console.log(`Welcome to the File Manager, ${user}!`)
@@ -173,6 +174,32 @@ async function deleteFile(filePath) {
     } else {
       console.log('Failed to delete the file')
     }
+  }
+}
+
+function systemInfo(argument) {
+  switch (argument) {
+    case '--EOL':
+      console.log(`End-of-Line marker: ${JSON.stringify(os.EOL)}`)
+      break
+    case '--cpus':
+      const cpuInfo = os.cpus()
+      console.log(`Total CPUs: ${cpuInfo.length}`)
+      cpuInfo.forEach((cpu, index) => {
+        console.log(`CPU #${index + 1}: Model=${cpu.model}, Speed=${cpu.speed / 1000} GHz`)
+      })
+      break
+    case '--homedir':
+      console.log(`Home Directory: ${os.homedir()}`)
+      break
+    case '--username':
+      console.log(`Username: ${os.userInfo().username}`)
+      break
+    case '--architecture':
+      console.log(`Architecture: ${os.arch()}`)
+      break
+    default:
+      console.log('Invalid argument. Use one of --EOL, --cpus, --homedir, --username, --architecture')
   }
 }
 
