@@ -37,6 +37,7 @@ const commands = {
   add: createEmptyFile,
   rn: renameFile,
   cp: copyFile,
+  mv: moveFile,
 }
 
 console.log(`Welcome to the File Manager, ${user}!`)
@@ -93,6 +94,57 @@ function displayFileContent(filePath) {
     }
   })
 }
+
+async function moveFile(sourcePath, destinationDir) {
+  if (typeof sourcePath !== 'string' || typeof destinationDir !== 'string') {
+    console.log("Error: Both source path and destination directory must be provided as strings.")
+    return
+  }
+  const resolvedSourcePath = resolve(process.cwd(), sourcePath)
+  const resolvedDestinationDir = resolve(process.cwd(), destinationDir)
+  const destinationPath = join(resolvedDestinationDir, basename(sourcePath))
+
+  try {
+    const sourceStats = await fs.stat(resolvedSourcePath)
+    if (!sourceStats.isFile()) {
+      console.log("The source is not a file.")
+      return
+    }
+
+    try {
+      const destinationStats = await fs.stat(resolvedDestinationDir)
+      if (!destinationStats.isDirectory()) {
+        console.log("The destination is not a directory.")
+        return
+      }
+    } catch (error) {
+      if (error.code === 'ENOENT') {
+        console.log("The destination directory does not exist.")
+        return
+      }
+      throw error
+    }
+
+    const readable = createReadStream(resolvedSourcePath)
+    const writable = createWriteStream(destinationPath)
+
+    readable.pipe(writable).on('finish', async () => {
+      try {
+        await fs.unlink(resolvedSourcePath)
+        console.log(`${basename(sourcePath)} has been moved to ${destinationDir}`)
+      } catch (error) {
+        console.log("Failed to delete the original file.")
+      }
+    })
+
+    readable.on('error', () => console.log("Failed to read the source file."))
+    writable.on('error', () => console.log("Failed to write to the destination file."))
+
+  } catch (error) {
+    console.log("An error occurred: " + error.message)
+  }
+}
+
 
 async function createEmptyFile(fileName) {
   const fullPath = resolve(process.cwd(), fileName)
