@@ -1,6 +1,6 @@
 import { homedir } from "os"
 import readline from "readline"
-import path, {resolve, format} from 'path'
+import path, {resolve, format, dirname, basename, join} from 'path'
 import fs from 'fs/promises'
 import { cwd } from 'process'
 import { createReadStream } from 'fs'
@@ -35,6 +35,7 @@ const commands = {
   ls: ls,
   cat: displayFileContent,
   add: createEmptyFile,
+  rn: renameFile,
 }
 
 console.log(`Welcome to the File Manager, ${user}!`)
@@ -106,6 +107,17 @@ async function createEmptyFile(fileName) {
   }
 }
 
+async function renameFile(oldPath, newName) {
+  const sourcePath = resolve(process.cwd(), oldPath);
+  const destinationPath = join(dirname(sourcePath), newName);
+
+  try {
+    await fs.rename(sourcePath, destinationPath);
+    console.log(`${basename(oldPath)} has been renamed to ${newName}`);
+  } catch (error) {
+    console.log('Failed to rename the file. Make sure the file exists and the new name is valid.');
+  }
+}
 
 function cd(directory) {
   const targetDirectory = resolve(process.cwd(), directory)
