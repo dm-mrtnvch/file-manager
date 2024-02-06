@@ -5,7 +5,7 @@ import fs from 'fs/promises'
 import { cwd } from 'process'
 import { createReadStream, createWriteStream } from 'fs'
 import { createHash } from 'crypto'
-import { createBrotliCompress } from 'zlib'
+import { createBrotliCompress, createBrotliDecompress } from 'zlib'
 import { pipeline } from 'stream/promises'
 
 
@@ -45,7 +45,8 @@ const commands = {
   rm: deleteFile,
   os: systemInfo,
   hash: hashFile,
-  compress: compressFile
+  compress: compressFile,
+  decompress: decompressFile
 }
 
 console.log(`Welcome to the File Manager, ${user}!`)
@@ -173,6 +174,25 @@ async function compressFile(inputPath, outputPath) {
     console.log(`File has been compressed and saved to: ${outputPath}`)
   } catch (error) {
     console.error('Compression failed:', error)
+  }
+}
+
+async function decompressFile(inputPath, outputPath) {
+  const resolvedInputPath = resolve(process.cwd(), inputPath)
+  const resolvedOutputPath = resolve(outputPath)
+  const sourceStream = createReadStream(resolvedInputPath)
+  const destinationStream = createWriteStream(resolvedOutputPath)
+  const decompressStream = createBrotliDecompress()
+
+  try {
+    await pipeline(
+      sourceStream,
+      decompressStream,
+      destinationStream
+    )
+    console.log(`File has been decompressed and saved to: ${resolvedOutputPath}`)
+  } catch (error) {
+    console.error('Decompression failed:', error)
   }
 }
 
