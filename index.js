@@ -33,7 +33,8 @@ const commands = {
   up: up,
   cd: cd,
   ls: ls,
-  cat: displayFileContent
+  cat: displayFileContent,
+  add: createEmptyFile,
 }
 
 console.log(`Welcome to the File Manager, ${user}!`)
@@ -90,6 +91,21 @@ function displayFileContent(filePath) {
     }
   })
 }
+
+async function createEmptyFile(fileName) {
+  const fullPath = resolve(process.cwd(), fileName)
+  try {
+    await fs.writeFile(fullPath, '')
+    console.log(`${fileName} file has been created`)
+  } catch (error) {
+    if (error.code === 'EEXIST') {
+      console.log('Cannot create the file: it already exists')
+    } else {
+      console.log('Failed to create the file')
+    }
+  }
+}
+
 
 function cd(directory) {
   const targetDirectory = resolve(process.cwd(), directory)
