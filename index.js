@@ -3,6 +3,7 @@ import readline from "readline"
 import path, {resolve, format} from 'path'
 import fs from 'fs/promises'
 import { cwd } from 'process'
+import { createReadStream } from 'fs'
 
 const homeDirectory = homedir()
 let user = process.argv.find(function(arg) { return arg.startsWith('--username=') })?.split('=')[1] || 'Anonymous'
@@ -31,7 +32,8 @@ function showCurrentDirectory() {
 const commands = {
   up: up,
   cd: cd,
-  ls: ls
+  ls: ls,
+  cat: displayFileContent
 }
 
 console.log(`Welcome to the File Manager, ${user}!`)
@@ -70,6 +72,23 @@ async function ls() {
   } catch {
     console.log('Failed to list directory contents')
   }
+}
+
+function displayFileContent(filePath) {
+  const fullPath = resolve(process.cwd(), filePath)
+  const stream = createReadStream(fullPath)
+
+  stream.on('open', () => {
+    stream.pipe(process.stdout)
+  })
+
+  stream.on('error', (error) => {
+    if (error.code === 'ENOENT') {
+      console.log('File does not exist')
+    } else {
+      console.log('Error reading file')
+    }
+  })
 }
 
 function cd(directory) {
