@@ -1,11 +1,11 @@
 import { homedir } from "os"
 import readline from "readline"
-import { EventEmitter } from "events"
+import path, {resolve} from 'path'
 
 const homeDirectory = homedir()
-let user = process.argv.find(arg => arg.startsWith('--username='))?.split('=')[1] || 'Anonymous'
+let user = process.argv.find(function(arg) { return arg.startsWith('--username=') })?.split('=')[1] || 'Anonymous'
 if (user === 'Anonymous') {
-  console.log('no user name. default name: Anonymous')
+  console.log('Username was not provided, defaulting to Anonymous')
 }
 
 process.chdir(homeDirectory)
@@ -15,30 +15,50 @@ const cli = readline.createInterface({
   output: process.stdout
 })
 
-const commandHandler = new EventEmitter()
-
-commandHandler.on('exit', () => {
-  console.log(`thanks for using file manager, ${user}, good bye!`)
-  cli.close()
-})
-
-const showCurrentDirectory = () => {
-  console.log(`current working directory is: ${process.cwd()}`)
+function up() {
+  const currentDir = process.cwd()
+  const parentDir = path.parse(currentDir).root === currentDir ? currentDir : path.join(currentDir, "..")
+  process.chdir(parentDir)
+  showCurrentDirectory()
 }
 
-console.log(`welcome to file manager, ${user}!`)
+function showCurrentDirectory() {
+  console.log(`You are currently in ${process.cwd()}`)
+}
+
+const commands = {
+  up: up,
+  cd: cd
+}
+
+console.log(`Welcome to the File Manager, ${user}!`)
 showCurrentDirectory()
 
-cli.on('line', (input) => {
+cli.on('line', function(input) {
   const [command, ...args] = input.trim().split(/\s+/)
   if (command === '.exit') {
-    commandHandler.emit('exit')
+    console.log(`Thank you for using File Manager, ${user}, goodbye!`)
+    cli.close()
+  } else if (commands[command]) {
+    commands[command](...args)
   } else {
-    console.log(`Invalid input: ${command}`)
+    console.log(`Invalid command: ${command}`)
     showCurrentDirectory()
   }
 })
 
-cli.on('SIGINT', () => {
-  commandHandler.emit('exit')
+function cd(directory) {
+  const targetDirectory = resolve(process.cwd(), directory)
+  try {
+    process.chdir(targetDirectory)
+    console.log(`Now in ${process.cwd()}`)
+  } catch {
+    console.log(`Failed to change directory to ${directory}`)
+  }
+}
+
+cli.on('SIGINT', function() {
+  console.log(`Thank you for using File Manager, ${user}, goodbye!`)
+  cli.close()
 })
+
